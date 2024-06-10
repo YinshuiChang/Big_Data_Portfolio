@@ -1,4 +1,4 @@
-FROM ubuntu:latest 
+FROM ubuntu:22.04 
 
 
 RUN apt-get update -y \
@@ -23,12 +23,19 @@ RUN echo "" | echo "" | echo "" | ssh-keygen -t rsa
 RUN cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 RUN chmod 640 ~/.ssh/authorized_keys
 RUN sudo apt-get install wget -y
+
+
+WORKDIR /home/alfa/downloads
 RUN wget https://dlcdn.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
 RUN tar -xvzf hadoop-3.3.6.tar.gz
-
+RUN wget https://dlcdn.apache.org/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3-scala2.13.tgz
+RUN tar -xvzf spark-3.5.1-bin-hadoop3-scala2.13.tgz
 
 RUN sudo chown -R alfa:alfa /opt/
 RUN mv hadoop-3.3.6 /opt/hadoop
+RUN mv spark-3.5.1-bin-hadoop3-scala2.13 /opt/spark
+
+
 RUN sudo mkdir -p /home/hadoop/hdfs/namenode
 RUN sudo mkdir -p /home/hadoop/hdfs/datanode
 RUN sudo mkdir -p /home/zookeeper
@@ -45,7 +52,6 @@ RUN sed -i 's/<\/configuration>/<property>\n<name>yarn.nodemanager.aux-services<
 
 RUN /opt/hadoop/bin/hdfs namenode -format
 
-
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre
 ENV HADOOP_HOME=/opt/hadoop
 ENV HADOOP_INSTALL=$HADOOP_HOME
@@ -57,6 +63,15 @@ ENV HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
 ENV PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin
 ENV HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib/native"
 
+ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
+ENV SPARK_HOME=/opt/spark
+ENV PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
+ENV LD_LIBRARY_PATH=$HADOOP_HOME/lib/native:$LD_LIBRARY_PATH
+
+WORKDIR /opt/spark/conf
+COPY spark-defaults.conf .
+COPY spark-env.sh .
+
 EXPOSE 22
 EXPOSE 9870
 EXPOSE 8088
@@ -64,7 +79,25 @@ EXPOSE 9000
 EXPOSE 9866
 EXPOSE 9864
 
+
+RUN echo "Y" | sudo apt install python3-pip
+RUN pip install jupyterlab
+RUN pip install numpy
+RUN pip install pyspark
+RUN pip install hdfs
+
+ENV PATH=$PATH:/home/alfa/.local/bin
+
+EXPOSE 8888
+
 WORKDIR /opt/hadoop/bin
 COPY docker-entrypoint.sh .
+
+RUN sudo mkdir -p /home/alfa/jupyter/source
+RUN sudo mkdir -p /home/alfa/jupyter/data
+RUN sudo chown -R alfa:alfa /home/alfa/jupyter
+
+RUN sudo chmod 777 -R /home/alfa/jupyter
+WORKDIR /home/alfa/jupyter
 
 ENTRYPOINT ["/opt/hadoop/bin/docker-entrypoint.sh"]

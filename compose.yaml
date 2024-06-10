@@ -2,13 +2,20 @@ services:
   hadoop:
     build: .
     ports:
+        - 22:22
         - 9870:9870
         - 8088:8088
+        - 8888:8888
         - 9000:9000
         - 9866:9866
         - 9864:9864
     volumes:
         - hdfs:/home/hadoop/hdfs
+        - jlab:/home/alfa/jupyter:Z
+    environment:
+        JUPYTER_ENABLE_LAB: "yes"
+        JUPYTER_TOKEN: "alfa"
 volumes:
   hdfs:
+  jlab:
   
