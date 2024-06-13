@@ -1,5 +1,5 @@
 # Big Data Analysis Portfolio
-Author: Yinshui Chang
+Author: Yinshui Chang  
 Work in Progress
 ## Project Title: Building a Sequence Alignment Tool Using Big Data Technologies with Minimal Dependencies
 
