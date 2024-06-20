@@ -109,6 +109,8 @@ RUN pip install numpy
 RUN pip install pyspark
 RUN pip install hdfs
 RUN pip install mrjob
+RUN pip install pandas
+RUN pip install seaborn
 
 # Add local bin to PATH
 ENV PATH=$PATH:/home/alfa/.local/bin

@@ -2,16 +2,26 @@
 
 from mrjob.job import MRJob
 from mrjob.step import MRStep
-from json import loads
+from json import loads, dumps
 from functools import reduce
 import numpy as np
+from mrjob.protocol import JSONValueProtocol
 
-query_sequence = "AGTACGCATACGGCATA"  # Replace this with user input
 
+class TupleProtocol(object):
+    def write(self, key, value):
+        return dumps(value).encode('utf_8')
 
 class Blastn_Hadoop(MRJob):
     # Include additional files needed by the job
     FILES = ['seq_utils.py']
+    
+    OUTPUT_PROTOCOL = TupleProtocol
+
+    def configure_args(self):
+        super(Blastn_Hadoop, self).configure_args()
+        self.add_passthru_arg(
+            '--query_sequence', type=str, default="AGTACGCATACGGCATA", help='please input a sequence to query')
 
     def mapper(self, _, line):
         """
@@ -21,7 +31,7 @@ class Blastn_Hadoop(MRJob):
         """
         from seq_utils import smith_waterman, substitution_matrix, gap_penalty
         seq = loads(line) # Parse the JSON line into a dictionary
-        yield _, (seq['transcript_id'], *smith_waterman(query_sequence, seq['sequence'], substitution_matrix, gap_penalty))
+        yield _, (seq['transcript_id'], *smith_waterman(self.options.query_sequence, seq['sequence'], substitution_matrix, gap_penalty))
 
 
     def mergeValue(self, c,v):
@@ -54,7 +64,7 @@ class Blastn_Hadoop(MRJob):
         It applies the mergeValue function to keep only the best alignments.
         """
         for i in reduce(self.mergeValue, blast, []):
-            yield _, i
+            yield _,i
 
 
 if __name__ == '__main__':

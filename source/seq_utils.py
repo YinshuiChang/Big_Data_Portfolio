@@ -241,14 +241,3 @@ def quality_adjusted_smith_waterman(seq1, qual1, seq2, substitution_matrix, gap_
             j -= 1
 
     return max_score, align1, align2
-
-def timing(f):
-    @wraps(f)
-    def wrap(*args, **kw):
-        ts = time()
-        result = f(*args, **kw)
-        te = time()
-        print('func:%r took: %2.4f sec' % \
-          (f.__name__, te-ts))
-        return result
-    return wrap
